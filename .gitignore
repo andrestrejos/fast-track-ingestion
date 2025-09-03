@@ -1,0 +1,35 @@
+# ---- Go ----
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/bin/
+/build/
+/dist/
+*.cover
+*.cov
+*.log
+/go.sum
+/vendor/
+
+
+# ---- IDEs / Editors ----
+.vscode/
+.idea/
+*.swp
+*.swo
+
+
+# ---- Docker ----
+*.pid
+*.sock
+*.tar
+*.tmp
+
+
+# ---- Local configuration ----
+.env
+*.local
