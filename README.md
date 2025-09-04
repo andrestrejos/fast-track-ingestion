@@ -29,7 +29,7 @@ This project implements a simple data ingestion pipeline using **Go**, **RabbitM
 
 ### 1. Clone the repository:
    ```bash
-   git clone https://github.com/<your-username>/fast-track-ingestion.git
+   git clone https://github.com/andrestrejos/fast-track-ingestion.git
    ```
 
 ### 2. Copy the environment file:
@@ -42,8 +42,9 @@ This project implements a simple data ingestion pipeline using **Go**, **RabbitM
    docker compose up -d
    ```
 
-### 4. Run the application:
+### 4. Compile and Run the application:
    ```bash
+   go mod tidy
    go run ./cmd/app
    ```
 
