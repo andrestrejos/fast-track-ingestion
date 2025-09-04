@@ -48,12 +48,12 @@ func (r *Repo) InsertPayment(ctx context.Context, e domain.PaymentEvent) error {
 		e.UserID, e.PaymentID, e.DepositAmount,
 	)
 	if err != nil {
-		// 1) detectar por tipo de error
+		// 1) Detect by error type
 		var me *mysql.MySQLError
 		if errors.As(err, &me) && me.Number == 1062 {
 			return ErrDuplicate
 		}
-		// 2) fallback: inspeccionar el mensaje
+		// 2) fallback: inspect the message
 		if strings.Contains(strings.ToLower(err.Error()), "duplicate entry") {
 			return ErrDuplicate
 		}

@@ -14,7 +14,7 @@ type Consumer struct {
 	AMQP      *amqp.Client
 	Repo      *db.Repo
 	Queue     string
-	Processed chan<- struct{} // canal para notificar mensajes procesados
+	Processed chan<- struct{} // Channel to notify processed messages
 }
 
 func (c *Consumer) Run(ctx context.Context, stop <-chan struct{}) error {
@@ -51,7 +51,7 @@ func (c *Consumer) Run(ctx context.Context, stop <-chan struct{}) error {
 						d.Nack(false, false)
 						continue
 					}
-					d.Ack(false) // duplicado manejado correctamente
+					d.Ack(false) // Duplicate handled correctly
 				} else {
 					log.Printf("insert error: %v", err)
 					d.Nack(false, false)
@@ -62,7 +62,7 @@ func (c *Consumer) Run(ctx context.Context, stop <-chan struct{}) error {
 				d.Ack(false)
 			}
 
-			// notifica que un mensaje fue procesado
+			// Notify that a message was processed
 			if c.Processed != nil {
 				select {
 				case c.Processed <- struct{}{}:

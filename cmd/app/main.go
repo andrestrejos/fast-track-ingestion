@@ -29,7 +29,7 @@ func mustEnv(key, def string) string {
 }
 
 func main() {
-	// Carga .env si existe (no falla si no está)
+	// Load .env if it exists (won’t fail if missing)
 	_ = godotenv.Load()
 
 	// --- ENV ---
@@ -44,7 +44,7 @@ func main() {
 	queue := mustEnv("RABBIT_QUEUE", "payment_events_q")
 	rk := mustEnv("RABBIT_ROUTING_KEY", "payment.event")
 
-	// Contexto con cancel por señales (Ctrl+C)
+	// Context with cancel on signals (Ctrl+C)
 	ctx, cancel := util.WithSignals(context.Background())
 	defer cancel()
 
@@ -72,7 +72,7 @@ func main() {
 		log.Fatalf("declare: %v", err)
 	}
 
-	// Canal para contar mensajes procesados (3 válidos + 1 duplicado)
+	// Channel to count processed messages (3 valid + 1 duplicate)
 	processed := make(chan struct{}, 4)
 
 	// Consumer
@@ -80,7 +80,7 @@ func main() {
 		AMQP:      amqpCli,
 		Repo:      repo,
 		Queue:     q.Name,
-		Processed: processed, // <- el consumer debe enviar una señal por cada mensaje ACKed
+		Processed: processed, // <- consumer must send a signal for each ACKed message
 	}
 	stopConsume := make(chan struct{})
 	log.Println("consumer starting on queue:", q.Name)
@@ -90,31 +90,31 @@ func main() {
 		}
 	}()
 
-	// Publisher (3 eventos) con sincronización
+	// Publisher (3 events) with synchronization
 	publisher := &ingest.Publisher{AMQP: amqpCli, Exchange: exchange, RoutingKey: rk}
 	var wg sync.WaitGroup
 	done := make(chan struct{})
 	publisher.Run(ctx, &wg, done)
 
-	// Espera a que se publiquen los 3 eventos iniciales
+	// Wait until the 3 initial events are published
 	<-done
 
-	// Publica el duplicado para forzar PK violation -> irá a skipped_messages
+	// Publish the duplicate to force a PK violation → will go to skipped_messages
 	dup := domain.PaymentEvent{UserID: 1, PaymentID: 1, DepositAmount: 10}
 	b, _ := json.Marshal(dup)
 	if err := amqpCli.Publish(ctx, exchange, rk, b); err != nil {
 		log.Printf("publish dup err: %v", err)
 	}
 
-	// Espera a que termine la goroutine del publisher
+	// Wait until the publisher goroutine finishes
 	wg.Wait()
 
-	// Espera hasta que el consumer procese exactamente 4 mensajes
+	// Wait until the consumer processes exactly 4 messages
 	for i := 0; i < 4; i++ {
 		<-processed
 	}
 
-	// Cierre ordenado del consumer
+	// Graceful shutdown of consumer
 	close(stopConsume)
 	log.Println("processed 4 messages; shutting down gracefully")
 }
